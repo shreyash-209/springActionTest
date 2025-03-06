@@ -1,0 +1,38 @@
+name: Java CI/CD with Maven & Azure
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'Leaderboard/**'  # Fix syntax error in paths
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package
+        working-directory: Leaderboard  # Specify correct folder for Maven build
+
+      - name: Upload dependency graph (Optional)
+        uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: leaderboard
+          publish-profile: ${{ secrets.AZURE_PUBLIC_PROFILE }}
+          package: Leaderboard/target/*.jar  # Deploy the built JAR file
